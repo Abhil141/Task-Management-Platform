@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import jwt
 
-from .deps import get_db
+from .deps import get_db, get_current_user
 from .models import User
-from .schemas import UserCreate
+from .schemas import UserCreate, UserOut
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -75,3 +75,7 @@ def login(
         "access_token": token,
         "token_type": "bearer"
     }
+    
+@router.get("/me", response_model=UserOut)
+def get_me(current_user = Depends(get_current_user)):
+    return current_user    

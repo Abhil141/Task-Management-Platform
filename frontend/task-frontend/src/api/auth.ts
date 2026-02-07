@@ -1,5 +1,14 @@
 import { apiFetch } from "./client";
 
+/* ---------- TYPES ---------- */
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+/* ---------- LOGIN ---------- */
+/* FastAPI OAuth2PasswordRequestForm expects form data */
 export async function login(email: string, password: string) {
   const form = new URLSearchParams();
   form.append("username", email);
@@ -10,12 +19,18 @@ export async function login(email: string, password: string) {
     body: form,
   });
 
+  if (!res.ok) {
+    throw new Error("Login failed");
+  }
+
   return res.json();
 }
 
-export function register(name: string, email: string, password: string) {
+/* ---------- REGISTER ---------- */
+/* Register uses normal JSON */
+export async function register(data: RegisterPayload) {
   return apiFetch("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify(data),
   });
 }

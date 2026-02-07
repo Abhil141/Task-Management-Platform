@@ -11,17 +11,21 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/overview")
 def overview(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     status_data = (
-        db.query(Task.status, func.count(Task.id))
+        db.query(Task.status, func.count(Task.id).label("count"))
+        .filter(Task.is_deleted == False)
         .group_by(Task.status)
+        .order_by(Task.status)
         .all()
     )
 
     priority_data = (
-        db.query(Task.priority, func.count(Task.id))
+        db.query(Task.priority, func.count(Task.id).label("count"))
+        .filter(Task.is_deleted == False)
         .group_by(Task.priority)
+        .order_by(Task.priority)
         .all()
     )
 
@@ -33,24 +37,29 @@ def overview(
         "by_priority": [
             {"priority": priority, "count": count}
             for priority, count in priority_data
-        ]
+        ],
     }
 
 
 @router.get("/user-performance")
 def user_performance(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     data = (
-        db.query(Task.created_by, func.count(Task.id))
+        db.query(
+            Task.created_by.label("user_id"),
+            func.count(Task.id).label("task_count"),
+        )
+        .filter(Task.is_deleted == False)
         .group_by(Task.created_by)
+        .order_by(func.count(Task.id).desc())
         .all()
     )
 
     return [
-        {"user_id": user_id, "task_count": count}
-        for user_id, count in data
+        {"user_id": user_id, "task_count": task_count}
+        for user_id, task_count in data
     ]
 
 
@@ -62,11 +71,15 @@ def task_trends(
     data = (
         db.query(func.date(Task.created_at), func.count(Task.id))
         .group_by(func.date(Task.created_at))
+        .order_by(func.date(Task.created_at))
         .all()
     )
 
     return [
-        {"date": str(date), "count": count}
+        {
+            "date": str(date),  # ✅ already string in SQLite
+            "count": count
+        }
         for date, count in data
     ]
 

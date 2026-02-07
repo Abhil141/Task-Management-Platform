@@ -1,0 +1,159 @@
+/* ---------- Reset & Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+/* ---------- Page Layout ---------- */
+.page {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    margin: 20px auto;
+    padding: 16px;
+  }
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- Typography ---------- */
+h1,
+h2,
+h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ---------- Forms ---------- */
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* ---------- Buttons ---------- */
+button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+button.secondary:hover {
+  background: #d1d5db;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+button.danger:hover {
+  background: #b91c1c;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- Tables ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ---------- Utility States ---------- */
+.loading {
+  color: #6b7280;
+}
+
+.error {
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
+.empty {
+  color: #6b7280;
+  font-style: italic;
+}

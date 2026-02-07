@@ -1,47 +1,78 @@
 import { useEffect, useState } from "react";
 import { getOverview } from "../api/analytics";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import "../layout/layout.css";
 
-type Stat = {
+type StatusCount = {
+  status: string;
   count: number;
-  status?: string;
-  priority?: string;
 };
 
 export default function Dashboard() {
-  const [data, setData] = useState<{
-    by_status: Stat[];
-    by_priority: Stat[];
-  } | null>(null);
+  const [statusData, setStatusData] = useState<StatusCount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    getOverview().then(setData);
+    async function load() {
+      try {
+        const res = await getOverview();
+        setStatusData(res.by_status);
+      } catch {
+        setError("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, []);
 
-  if (!data) {
-    return <div className="page">Loading dashboard...</div>;
-  }
+  const totalTasks = statusData.reduce(
+    (sum, item) => sum + item.count,
+    0
+  );
+
+  if (loading) return <p className="page">Loading dashboard...</p>;
+  if (error) return <p className="page error">{error}</p>;
 
   return (
     <div className="page">
-      <h2>Dashboard</h2>
+      <h1>Dashboard</h1>
 
-      <h3>Tasks by Status</h3>
-      <ul>
-        {data.by_status.map((s, idx) => (
-          <li key={idx}>
-            {s.status}: {s.count}
-          </li>
-        ))}
-      </ul>
+      {/* Summary Cards */}
+      <div className="grid">
+        <div className="card">
+          <h3>Total Tasks</h3>
+          <p className="big">{totalTasks}</p>
+        </div>
 
-      <h3>Tasks by Priority</h3>
-      <ul>
-        {data.by_priority.map((p, idx) => (
-          <li key={idx}>
-            {p.priority}: {p.count}
-          </li>
+        {statusData.map((item) => (
+          <div className="card" key={item.status}>
+            <h3>{item.status}</h3>
+            <p className="big">{item.count}</p>
+          </div>
         ))}
-      </ul>
+      </div>
+
+      {/* Chart */}
+      <div className="card">
+        <h3>Tasks by Status</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={statusData}>
+            <XAxis dataKey="status" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="count" fill="#4f46e5" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

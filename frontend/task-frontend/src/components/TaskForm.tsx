@@ -1,30 +1,65 @@
 import { useState } from "react";
-
-type TaskInput = {
-  title?: string;
-};
+import type { TaskInput } from "../api/tasks";
 
 type Props = {
   onSubmit: (data: TaskInput) => void;
-  initialData?: TaskInput;
 };
 
-export default function TaskForm({ onSubmit, initialData }: Props) {
-  const [title, setTitle] = useState(initialData?.title ?? "");
+export default function TaskForm({ onSubmit }: Props) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<TaskInput["status"]>("todo");
+  const [priority, setPriority] = useState<TaskInput["priority"]>("medium");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    onSubmit({ title });
-  };
+    onSubmit({ title, description, status, priority });
+    setTitle("");
+    setDescription("");
+  }
+
+  function handleStatusChange(
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) {
+    setStatus(e.target.value as TaskInput["status"]);
+  }
+
+  function handlePriorityChange(
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) {
+    setPriority(e.target.value as TaskInput["priority"]);
+  }
 
   return (
     <form onSubmit={handleSubmit}>
+      <label>Title</label>
       <input
-        placeholder="Task title"
+        required
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={e => setTitle(e.target.value)}
       />
-      <button type="submit">Save</button>
+
+      <label>Description</label>
+      <textarea
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+      />
+
+      <label>Status</label>
+      <select value={status} onChange={handleStatusChange}>
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+
+      <label>Priority</label>
+      <select value={priority} onChange={handlePriorityChange}>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+
+      <button type="submit">Create Task</button>
     </form>
   );
 }

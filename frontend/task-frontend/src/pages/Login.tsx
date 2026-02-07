@@ -2,18 +2,21 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/useAuth";
+import "../layout/layout.css";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
   const { setToken } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       const res = await login(email, password);
@@ -21,37 +24,45 @@ export default function Login() {
       navigate("/dashboard");
     } catch {
       setError("Invalid email or password");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="page">
-      <h2>Login</h2>
+    <div className="page" style={{ maxWidth: 420 }}>
+      <div className="card">
+        <h2>Login</h2>
 
-      {error && <p className="error">{error}</p>}
+        {error && <div className="error">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <form onSubmit={handleSubmit}>
+          <label>Email</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <label>Password</label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        <button type="submit">Login</button>
-      </form>
+          <button disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
 
-      <p>
-        Don’t have an account? <Link to="/register">Register</Link>
-      </p>
+        <p style={{ marginTop: 16 }}>
+          Don’t have an account?{" "}
+          <Link to="/register">Register</Link>
+        </p>
+      </div>
     </div>
   );
 }

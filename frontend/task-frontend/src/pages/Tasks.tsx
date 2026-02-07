@@ -1,87 +1,120 @@
-import { useEffect, useState } from "react";
-import { getTasks, createTask, deleteTask } from "../api/tasks";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  getTasks,
+  createTask,
+  deleteTask,
+  type Task,
+} from "../api/tasks";
+import TaskForm from "../components/TaskForm";
+import TaskTable from "../components/TaskTable";
+import "../layout/layout.css";
 
-type Task = {
-  id: number;
-  title: string;
-  status: string;
-};
+type StatusFilter = "all" | Task["status"];
 
 export default function Tasks() {
+  const navigate = useNavigate();
+
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>("all");
 
-    const fetchTasks = async () => {
+  async function loadTasks() {
+    try {
       setLoading(true);
       const data = await getTasks();
-      if (isMounted) {
-        setTasks(data);
-        setLoading(false);
-      }
-    };
+      setTasks(data);
+    } catch {
+      setError("Failed to load tasks");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    fetchTasks();
-
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    loadTasks();
   }, []);
 
-  const handleCreate = async () => {
-    if (!title.trim()) return;
+  async function handleCreate(task: Omit<Task, "id">) {
+    await createTask(task);
+    loadTasks();
+  }
 
-    await createTask({
-      title,
-      status: "todo",
-      priority: "medium",
-    });
-
-    setTitle("");
-    const data = await getTasks();
-    setTasks(data);
-  };
-
-  const handleDelete = async (id: number) => {
+  async function handleDelete(id: number) {
+    if (!confirm("Delete this task?")) return;
     await deleteTask(id);
-    const data = await getTasks();
-    setTasks(data);
-  };
+    loadTasks();
+  }
+
+  function handleStatusFilterChange(
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) {
+    setStatusFilter(e.target.value as StatusFilter);
+  }
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || task.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [tasks, search, statusFilter]);
 
   if (loading) {
-    return <div className="page">Loading tasks...</div>;
+    return <p className="page loading">Loading tasks...</p>;
+  }
+
+  if (error) {
+    return <p className="page error">{error}</p>;
   }
 
   return (
     <div className="page">
-      <h2>Tasks</h2>
+      <h1>Tasks</h1>
 
-      <input
-        placeholder="New task title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <button onClick={handleCreate}>Add Task</button>
+      {/* Filters */}
+      <div className="card">
+        <input
+          placeholder="Search tasks..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-      {tasks.length === 0 && <p>No tasks found</p>}
+        <select
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+        >
+          <option value="all">All Status</option>
+          <option value="todo">To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
 
-      <ul>
-        {tasks.map((task) => (
-          <li key={task.id}>
-            <Link to={`/tasks/${task.id}`}>{task.title}</Link> ({task.status})
-            <button
-              style={{ marginLeft: "10px" }}
-              onClick={() => handleDelete(task.id)}
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Create Task */}
+      <div className="card">
+        <h3>Create Task</h3>
+        <TaskForm onSubmit={handleCreate} />
+      </div>
+
+      {/* Task Table */}
+      <div className="card">
+        <h3>All Tasks</h3>
+        <TaskTable
+          tasks={filteredTasks}
+          onDelete={handleDelete}
+          onOpen={(id) => navigate(`/tasks/${id}`)}
+        />
+      </div>
     </div>
   );
 }

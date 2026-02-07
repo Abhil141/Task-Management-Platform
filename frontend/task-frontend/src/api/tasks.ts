@@ -1,18 +1,24 @@
 import { apiFetch } from "./client";
 
-export function getTasks() {
-  return apiFetch("/tasks");
-}
+export type Task = {
+  id: number;
+  title: string;
+  description?: string;
+  status: "todo" | "in_progress" | "done";
+  priority: "low" | "medium" | "high";
+  due_date?: string;
+};
 
-export function createTask(task: unknown) {
-  return apiFetch("/tasks", {
-    method: "POST",
-    body: JSON.stringify(task),
-  });
-}
+export type TaskInput = Omit<Task, "id">;
 
-export function deleteTask(taskId: number) {
-  return apiFetch(`/tasks/${taskId}`, {
-    method: "DELETE",
-  });
-}
+export const getTasks = () => apiFetch("/tasks");
+export const getTask = (id: number) => apiFetch(`/tasks/${id}`);
+
+export const createTask = (data: TaskInput) =>
+  apiFetch("/tasks", { method: "POST", body: JSON.stringify(data) });
+
+export const updateTask = (id: number, data: Partial<TaskInput>) =>
+  apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify(data) });
+
+export const deleteTask = (id: number) =>
+  apiFetch(`/tasks/${id}`, { method: "DELETE" });
