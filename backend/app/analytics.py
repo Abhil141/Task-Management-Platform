@@ -1,20 +1,32 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from .deps import get_db, get_current_user
 from .models import Task, User
 
-router = APIRouter(prefix="/analytics", tags=["Analytics"])
+router = APIRouter(
+    prefix="/analytics",
+    tags=["Analytics"],
+)
 
 
-@router.get("/overview")
+# --------------------
+# Overview Statistics
+# --------------------
+@router.get(
+    "/overview",
+    status_code=status.HTTP_200_OK,
+)
 def overview(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     status_data = (
-        db.query(Task.status, func.count(Task.id).label("count"))
+        db.query(
+            Task.status,
+            func.count(Task.id).label("count"),
+        )
         .filter(Task.is_deleted == False)
         .group_by(Task.status)
         .order_by(Task.status)
@@ -22,7 +34,10 @@ def overview(
     )
 
     priority_data = (
-        db.query(Task.priority, func.count(Task.id).label("count"))
+        db.query(
+            Task.priority,
+            func.count(Task.id).label("count"),
+        )
         .filter(Task.is_deleted == False)
         .group_by(Task.priority)
         .order_by(Task.priority)
@@ -41,7 +56,13 @@ def overview(
     }
 
 
-@router.get("/user-performance")
+# --------------------
+# User Performance
+# --------------------
+@router.get(
+    "/user-performance",
+    status_code=status.HTTP_200_OK,
+)
 def user_performance(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -63,13 +84,23 @@ def user_performance(
     ]
 
 
-@router.get("/trends")
+# --------------------
+# Task Trends Over Time
+# --------------------
+@router.get(
+    "/trends",
+    status_code=status.HTTP_200_OK,
+)
 def task_trends(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     data = (
-        db.query(func.date(Task.created_at), func.count(Task.id))
+        db.query(
+            func.date(Task.created_at).label("date"),
+            func.count(Task.id).label("count"),
+        )
+        .filter(Task.is_deleted == False)
         .group_by(func.date(Task.created_at))
         .order_by(func.date(Task.created_at))
         .all()
@@ -77,9 +108,8 @@ def task_trends(
 
     return [
         {
-            "date": str(date),  # ✅ already string in SQLite
-            "count": count
+            "date": str(date),  # SQLite returns string → safe
+            "count": count,
         }
         for date, count in data
     ]
-

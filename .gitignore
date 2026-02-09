@@ -17,3 +17,6 @@ node_modules/
 dist/
 frontend/**/node_modules/
 frontend/**/dist/
+backend/uploads/*
+!backend/uploads/README.md
+!backend/uploads/requirements.txt

@@ -33,7 +33,7 @@ export default function Analytics() {
   const [trendData, setTrendData] = useState<TrendStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   useEffect(() => {
     let isMounted = true;
 
@@ -48,7 +48,7 @@ export default function Analytics() {
         setPriorityData(overview.by_priority);
         setTrendData(trends);
       } catch (err) {
-        console.error("Failed to load analytics", err);
+        console.error(err);
         if (isMounted) setError("Failed to load analytics data");
       } finally {
         if (isMounted) setLoading(false);
@@ -56,14 +56,13 @@ export default function Analytics() {
     }
 
     loadAnalytics();
-
     return () => {
       isMounted = false;
     };
   }, []);
 
   if (loading) {
-    return <div className="page loading">Loading analytics...</div>;
+    return <div className="page loading">Loading analytics…</div>;
   }
 
   if (error) {
@@ -74,45 +73,47 @@ export default function Analytics() {
     <div className="page">
       <h1>Analytics</h1>
 
-      {/* Tasks by Status */}
-      <div className="card">
-        <h3>Tasks by Status</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={statusData}>
-            <XAxis dataKey="status" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="count" fill="#2563eb" />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Overview charts */}
+      <div className="-fixed">
+        <div className="card">
+          <h3>Tasks by Status</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={statusData}>
+              <XAxis dataKey="status" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#2563eb" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="card">
+          <h3>Tasks by Priority</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={priorityData}>
+              <XAxis dataKey="priority" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#16a34a" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Tasks by Priority */}
-      <div className="card">
-        <h3>Tasks by Priority</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={priorityData}>
-            <XAxis dataKey="priority" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="count" fill="#16a34a" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Task Trends */}
+      {/* Trend chart */}
       <div className="card">
         <h3>Task Trends Over Time</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={340}>
           <LineChart data={trendData}>
             <XAxis dataKey="date" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip />
             <Line
               type="monotone"
               dataKey="count"
               stroke="#dc2626"
-              strokeWidth={2}
+              strokeWidth={3}
+              dot={{ r: 3 }}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -10,6 +10,7 @@ import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
+import CreateTask from "./pages/CreateTask";
 
 function AppRoutes() {
   const { token } = useAuth();
@@ -37,6 +38,7 @@ function AppRoutes() {
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/tasks/create" element={<CreateTask />} />
       </Route>
     </Routes>
   );

@@ -1,5 +1,9 @@
 import { apiFetch } from "./client";
 
+/* ======================
+   Types
+====================== */
+
 export type Comment = {
   id: number;
   content: string;
@@ -7,19 +11,45 @@ export type Comment = {
   user_id: number;
 };
 
-export function getComments(taskId: number) {
-  return apiFetch(`/comments/task/${taskId}`);
-}
+/* ======================
+   API calls
+====================== */
 
-export function addComment(taskId: number, content: string) {
+/* Get all comments for a task */
+export const getComments = (
+  taskId: number
+): Promise<Comment[]> => {
+  return apiFetch(`/comments/task/${taskId}`);
+};
+
+/* Add comment to task */
+export const addComment = (
+  taskId: number,
+  content: string
+): Promise<Comment> => {
   return apiFetch(`/comments/task/${taskId}`, {
     method: "POST",
     body: JSON.stringify({ content }),
   });
-}
+};
 
-export function deleteComment(commentId: number) {
+/* Update comment ✅ NEW */
+export const updateComment = (
+  commentId: number,
+  content: string
+): Promise<Comment> => {
+  return apiFetch(`/comments/${commentId}`, {
+    method: "PUT",
+    body: JSON.stringify({ content }),
+  });
+};
+
+/* Delete comment */
+export const deleteComment = (
+  commentId: number
+): Promise<{ message: string }> => {
   return apiFetch(`/comments/${commentId}`, {
     method: "DELETE",
   });
-}
+};
+

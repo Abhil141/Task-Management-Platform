@@ -34,9 +34,11 @@ class UserOut(BaseModel):
     id: int
     name: str
     email: EmailStr
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
 
 # --------------------
 # Task Schemas
@@ -45,8 +47,8 @@ class UserOut(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
-    status: TaskStatus
-    priority: TaskPriority
+    status: TaskStatus = TaskStatus.todo
+    priority: TaskPriority = TaskPriority.medium
     due_date: Optional[datetime] = None
     tags: Optional[str] = None
     assigned_to: Optional[int] = None
@@ -77,3 +79,40 @@ class TaskOut(BaseModel):
     class Config:
         from_attributes = True
 
+
+# --------------------
+# Comment Schemas
+# --------------------
+
+class CommentCreate(BaseModel):
+    content: str
+
+
+class CommentUpdate(BaseModel):
+    content: str
+
+
+class CommentOut(BaseModel):
+    id: int
+    content: str
+    task_id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --------------------
+# File Schemas
+# --------------------
+
+class FileOut(BaseModel):
+    id: int
+    filename: str
+    task_id: int
+    uploaded_by: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
