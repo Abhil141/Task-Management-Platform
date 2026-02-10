@@ -47,7 +47,7 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    # Swagger OAuth uses "username" — we treat it as email
+    # Swagger OAuth uses "username" 
     user = db.query(User).filter(User.email == form_data.username).first()
 
     if not user:

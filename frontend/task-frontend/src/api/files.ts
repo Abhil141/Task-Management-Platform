@@ -13,8 +13,6 @@ export type FileItem = {
 export async function uploadFile(taskId: number, file: File) {
   const form = new FormData();
 
-  // IMPORTANT: key name must match backend expectation
-  // (keep "upload" since your backend already accepts it)
   form.append("upload", file);
 
   const res = await fetch(
@@ -23,7 +21,6 @@ export async function uploadFile(taskId: number, file: File) {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-        // ❗ DO NOT set Content-Type when using FormData
       },
       body: form,
     }

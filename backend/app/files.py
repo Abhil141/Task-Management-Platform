@@ -40,7 +40,6 @@ def upload_file(
 ):
     validate_file(upload)
 
-    # ✅ Authorize via task ownership
     task = (
         db.query(Task)
         .filter(
@@ -65,7 +64,6 @@ def upload_file(
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to save file")
 
-    # 🚨 FIX: removed uploaded_by (not in DB model)
     file_db = FileModel(
         filename=upload.filename,
         path=file_path,
@@ -125,7 +123,6 @@ def download_file(
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # ✅ Authorize via task ownership
     task = (
         db.query(Task)
         .filter(
@@ -163,7 +160,6 @@ def delete_file(
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # ✅ Authorize via task ownership
     task = (
         db.query(Task)
         .filter(

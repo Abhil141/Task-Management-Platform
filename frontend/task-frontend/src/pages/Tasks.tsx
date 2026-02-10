@@ -1,30 +1,41 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   getTasks,
   deleteTask,
   updateTask,
-  exportTasks,
   type Task,
   type TaskInput,
   type TaskSortBy,
   type SortOrder,
-  type ExportFormat,
 } from "../api/tasks";
+
 import TaskForm from "../components/TaskForm";
+import Toast from "../components/Toast";
+
 import "../layout/layout.css";
 
 type StatusFilter = "" | Task["status"];
 type PriorityFilter = "" | Task["priority"];
+type ToastType = "success" | "error" | "info";
 
 export default function Tasks() {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  // 🔑 SEARCH FIX
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
+
+  const notify = (message: string, type: ToastType = "info") => {
+    setToast({ message, type });
+  };
+
+  // SEARCH
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
@@ -43,13 +54,10 @@ export default function Tasks() {
   // edit modal
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // export
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState("");
-
-  async function loadTasks() {
+  async function loadTasks(): Promise<void> {
     try {
       setLoading(true);
+
       const data = await getTasks({
         search: search || undefined,
         status: status || undefined,
@@ -59,9 +67,10 @@ export default function Tasks() {
         page,
         limit,
       });
+
       setTasks(data);
     } catch {
-      setError("Failed to load tasks");
+      notify("Failed to load tasks.", "error");
     } finally {
       setLoading(false);
     }
@@ -90,62 +99,47 @@ export default function Tasks() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [editingTask]);
 
-  async function handleUpdate(data: TaskInput) {
+  async function handleUpdate(data: TaskInput): Promise<void> {
     if (!editingTask) return;
-    await updateTask(editingTask.id, data);
-    setEditingTask(null);
-    await loadTasks();
-  }
 
-  async function handleDelete(id: number) {
-    if (!confirm("Delete this task?")) return;
-    await deleteTask(id);
-    await loadTasks();
-  }
-
-  async function handleExport(format: ExportFormat) {
     try {
-      setExporting(true);
-      setExportError("");
-
-      const blob = await exportTasks({
-        format,
-        search: search || undefined,
-        status: status || undefined,
-        priority: priority || undefined,
-      });
-
-      // 🔑 FIX: force JSON download
-      const downloadBlob =
-        format === "json"
-          ? new Blob([await blob.text()], {
-              type: "application/json",
-            })
-          : blob;
-
-      const url = URL.createObjectURL(downloadBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `tasks.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      setExportError("Failed to export tasks");
-    } finally {
-      setExporting(false);
+      await updateTask(editingTask.id, data);
+      setEditingTask(null);
+      await loadTasks();
+      notify("Task updated successfully.", "success");
+    } catch {
+      notify("Failed to update task.", "error");
     }
   }
 
-  if (loading) return <div className="page loading">Loading tasks…</div>;
-  if (error) return <div className="page error">{error}</div>;
+  async function handleDelete(id: number): Promise<void> {
+    try {
+      await deleteTask(id);
+      await loadTasks();
+      notify("Task deleted successfully.", "success");
+    } catch {
+      notify("Failed to delete task.", "error");
+    }
+  }
+
+  if (loading) {
+    return <div className="page loading">Loading tasks…</div>;
+  }
 
   return (
     <div className="page">
+      {/* TOAST */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div
         style={{
+          marginTop: -48,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -153,7 +147,6 @@ export default function Tasks() {
         }}
       >
         <h1 style={{ margin: 0 }}>Tasks</h1>
-
         <button onClick={() => navigate("/tasks/create")}>
           + Create Task
         </button>
@@ -163,7 +156,6 @@ export default function Tasks() {
       <div className="card section">
         <h3>Filters & Sorting</h3>
 
-        {/* ✅ FIXED SEARCH */}
         <input
           placeholder="Search by title"
           value={searchInput}
@@ -175,21 +167,36 @@ export default function Tasks() {
           }}
         />
 
-        <select value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+        <select
+          value={status}
+          onChange={(e) =>
+            setStatus(e.target.value as StatusFilter)
+          }
+        >
           <option value="">All Status</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
           <option value="done">Done</option>
         </select>
 
-        <select value={priority} onChange={(e) => setPriority(e.target.value as PriorityFilter)}>
+        <select
+          value={priority}
+          onChange={(e) =>
+            setPriority(e.target.value as PriorityFilter)
+          }
+        >
           <option value="">All Priority</option>
           <option value="low">Low</option>
           <option value="medium">Medium</option>
           <option value="high">High</option>
         </select>
 
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as TaskSortBy)}>
+        <select
+          value={sortBy}
+          onChange={(e) =>
+            setSortBy(e.target.value as TaskSortBy)
+          }
+        >
           <option value="created_at">Created At</option>
           <option value="priority">Priority</option>
           <option value="status">Status</option>
@@ -197,7 +204,12 @@ export default function Tasks() {
           <option value="title">Title</option>
         </select>
 
-        <select value={order} onChange={(e) => setOrder(e.target.value as SortOrder)}>
+        <select
+          value={order}
+          onChange={(e) =>
+            setOrder(e.target.value as SortOrder)
+          }
+        >
           <option value="desc">Descending</option>
           <option value="asc">Ascending</option>
         </select>
@@ -226,7 +238,9 @@ export default function Tasks() {
                     <td>
                       <button
                         className="link"
-                        onClick={() => navigate(`/tasks/${task.id}`)}
+                        onClick={() =>
+                          navigate(`/tasks/${task.id}`)
+                        }
                       >
                         <strong>{task.title}</strong>
                       </button>
@@ -244,10 +258,16 @@ export default function Tasks() {
                     </td>
                     <td>{task.priority}</td>
                     <td>
-                      <button className="secondary" onClick={() => setEditingTask(task)}>
+                      <button
+                        className="secondary"
+                        onClick={() => setEditingTask(task)}
+                      >
                         Edit
                       </button>
-                      <button className="danger" onClick={() => handleDelete(task.id)}>
+                      <button
+                        className="danger"
+                        onClick={() => handleDelete(task.id)}
+                      >
                         Delete
                       </button>
                     </td>
@@ -257,28 +277,22 @@ export default function Tasks() {
             </table>
 
             <div className="pagination">
-              <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
                 Previous
               </button>
               <span>Page {page}</span>
-              <button disabled={tasks.length < limit} onClick={() => setPage(page + 1)}>
+              <button
+                disabled={tasks.length < limit}
+                onClick={() => setPage(page + 1)}
+              >
                 Next
               </button>
             </div>
           </>
         )}
-      </div>
-
-      {/* Export */}
-      <div className="card section">
-        <h3>Export Tasks</h3>
-        {exportError && <p className="error">{exportError}</p>}
-        <button onClick={() => handleExport("csv")} disabled={exporting}>
-          Export CSV
-        </button>
-        <button className="secondary" onClick={() => handleExport("json")} disabled={exporting}>
-          Export JSON
-        </button>
       </div>
 
       {/* EDIT MODAL */}
@@ -287,7 +301,10 @@ export default function Tasks() {
           <div className="modal" role="dialog" aria-modal="true">
             <div className="modal-header">
               <h3>Edit Task</h3>
-              <button className="secondary" onClick={() => setEditingTask(null)}>
+              <button
+                className="secondary"
+                onClick={() => setEditingTask(null)}
+              >
                 ✕
               </button>
             </div>

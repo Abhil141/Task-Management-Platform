@@ -3,7 +3,6 @@
 ========================= */
 .app-shell {
   min-height: 100vh;
-  background: #f4f6f8;
   display: flex;
   flex-direction: column;
 }
@@ -60,6 +59,7 @@
 }
 
 .page > h1 {
+  margin-top: -48px;
   margin-bottom: 24px;
   font-size: 28px;
   font-weight: 700;
@@ -77,7 +77,6 @@
    Grids
 ========================= */
 
-/* Flexible grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -85,13 +84,12 @@
   margin-bottom: 32px;
 }
 
-/* Fixed grid for dashboard / analytics */
 .grid-fixed {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 32px;
-  align-items: stretch; /* IMPORTANT */
+  align-items: stretch; 
 }
 
 /* =========================
@@ -104,7 +102,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* 🔑 REAL FIX: equal height cards ONLY inside grid-fixed */
 .grid-fixed .card {
   height: 100%;
   display: flex;
@@ -268,7 +265,7 @@ tbody tr:hover td {
 }
 
 /* =========================
-   Modal (ADDED – nothing else touched)
+   Modal 
 ========================= */
 .modal-backdrop {
   position: fixed;
@@ -323,8 +320,10 @@ tbody tr:hover td {
   }
 
   .page > h1 {
+    margin-top: -48px;
     font-size: 22px;
     margin-bottom: 16px;
+    color: #111827;
   }
 
   .grid-fixed {
@@ -350,4 +349,19 @@ tbody tr:hover td {
   color: #6b7280;
   line-height: 1.4;
 }
+.app-background {
+  min-height: 100vh;
+  background-image:
+  linear-gradient(
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0.55)
+    ),
+    url("/bg.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+
+
 

@@ -6,22 +6,24 @@ import {
   updateComment,
 } from "../api/comments";
 
+type ToastType = "success" | "error" | "info";
+
 type Props = {
   taskId: number;
   comments: Comment[];
-  refresh: () => void;
+  refresh: () => Promise<void>;
+  notify: (message: string, type?: ToastType) => void;
 };
 
 export default function CommentList({
   taskId,
   comments,
   refresh,
+  notify,
 }: Props) {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // edit state
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
 
@@ -29,17 +31,19 @@ export default function CommentList({
      Add Comment
   -------------------- */
   async function handleSubmit(): Promise<void> {
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      notify("Comment cannot be empty.", "error");
+      return;
+    }
 
     try {
       setSubmitting(true);
-      setError(null);
-
       await addComment(taskId, content.trim());
       setContent("");
-      refresh();
+      await refresh();
+      notify("Comment posted successfully.", "success");
     } catch {
-      setError("Failed to post comment");
+      notify("Failed to post comment.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -52,11 +56,11 @@ export default function CommentList({
     if (!confirm("Delete this comment?")) return;
 
     try {
-      setError(null);
       await deleteComment(commentId);
-      refresh();
+      await refresh();
+      notify("Comment deleted successfully.", "success");
     } catch {
-      setError("Failed to delete comment");
+      notify("Failed to delete comment.", "error");
     }
   }
 
@@ -77,18 +81,20 @@ export default function CommentList({
      Save Edit
   -------------------- */
   async function saveEdit(commentId: number): Promise<void> {
-    if (!editContent.trim()) return;
+    if (!editContent.trim()) {
+      notify("Comment cannot be empty.", "error");
+      return;
+    }
 
     try {
       setSubmitting(true);
-      setError(null);
-
       await updateComment(commentId, editContent.trim());
       setEditingId(null);
       setEditContent("");
-      refresh();
+      await refresh();
+      notify("Comment updated successfully.", "success");
     } catch {
-      setError("Failed to update comment");
+      notify("Failed to update comment.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -96,10 +102,6 @@ export default function CommentList({
 
   return (
     <div>
-      <h3>Comments</h3>
-
-      {error && <p className="error">{error}</p>}
-
       {/* Add comment */}
       <textarea
         placeholder="Add a comment..."

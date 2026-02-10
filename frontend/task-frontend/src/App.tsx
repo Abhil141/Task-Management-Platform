@@ -16,31 +16,33 @@ function AppRoutes() {
   const { token } = useAuth();
 
   return (
-    <Routes>
-      {/* Public */}
-      <Route
-        path="/"
-        element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
-      />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <div className="app-background">
+      <Routes>
+        {/* Public */}
+        <Route
+          path="/"
+          element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* Protected */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/tasks/:id" element={<TaskDetail />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/tasks/create" element={<CreateTask />} />
-      </Route>
-    </Routes>
+        {/* Protected */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/:id" element={<TaskDetail />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/tasks/create" element={<CreateTask />} />
+        </Route>
+      </Routes>
+    </div>
   );
 }
 

@@ -21,7 +21,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
 
-    # Relationships (optional but useful)
+    # Relationships 
     created_tasks = relationship(
         "Task",
         foreign_keys="Task.created_by",

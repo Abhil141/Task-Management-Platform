@@ -20,3 +20,5 @@ frontend/**/dist/
 backend/uploads/*
 !backend/uploads/README.md
 !backend/uploads/requirements.txt
+.DS_Store
+frontend/.DS_Store

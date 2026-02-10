@@ -87,7 +87,7 @@ def get_tasks(
     if search:
         query = query.filter(Task.title.ilike(f"%{search}%"))
 
-    # -------- Sorting (SAFE) --------
+    # -------- Sorting  --------
     SORTABLE_FIELDS = {
         "created_at": Task.created_at,
         "priority": Task.priority,

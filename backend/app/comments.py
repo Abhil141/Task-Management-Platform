@@ -23,7 +23,6 @@ def add_comment(
     if not task or task.is_deleted:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # ensure user can comment only on own tasks
     if task.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 

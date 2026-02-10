@@ -33,7 +33,7 @@ export const addComment = (
   });
 };
 
-/* Update comment ✅ NEW */
+/* Update comment */
 export const updateComment = (
   commentId: number,
   content: string

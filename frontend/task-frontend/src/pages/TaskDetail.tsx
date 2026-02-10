@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import {
   getTask,
@@ -14,23 +13,34 @@ import { getFiles, type FileItem } from "../api/files";
 import TaskForm from "../components/TaskForm";
 import CommentList from "../components/CommentList";
 import FileUpload from "../components/FileUpload";
+import Toast from "../components/Toast";
 
 import "../layout/layout.css";
+
+type ToastType = "success" | "error" | "info";
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const taskId = Number(id);
+  const navigate = useNavigate();
 
   const [task, setTask] = useState<Task | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [editing, setEditing] = useState(false);
-  const navigate = useNavigate();
 
-  const loadTaskDetail = useCallback(async (): Promise<void> => {
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
+
+  const notify = (message: string, type: ToastType = "info") => {
+    setToast({ message, type });
+  };
+
+  const loadTaskDetail = useCallback(async () => {
     if (!taskId || Number.isNaN(taskId)) {
       setError("Invalid task id");
       return;
@@ -61,10 +71,15 @@ export default function TaskDetail() {
     loadTaskDetail();
   }, [loadTaskDetail]);
 
-  async function handleUpdate(data: TaskInput): Promise<void> {
-    await updateTask(taskId, data);
-    setEditing(false);
-    await loadTaskDetail();
+  async function handleUpdate(data: TaskInput) {
+    try {
+      await updateTask(taskId, data);
+      setEditing(false);
+      await loadTaskDetail();
+      notify("Task updated successfully.", "success");
+    } catch {
+      notify("Failed to update task.", "error");
+    }
   }
 
   if (loading) {
@@ -77,88 +92,97 @@ export default function TaskDetail() {
 
   return (
     <div className="page">
-      <div style={{ marginBottom: "24px" }}>
+      {/* TOAST */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <div style={{ marginBottom: 24 }}>
         <button onClick={() => navigate("/tasks")}>
           ← Back to Tasks
         </button>
       </div>
+
       {/* ======================
-          Task Header
+          TASK HEADER
       ====================== */}
       <div className="card">
         {!editing ? (
           <>
-            <div style={{ marginBottom: 16 }}>
-              <h1 style={{ marginBottom: 8 }}>{task.title}</h1>
+            <h1>{task.title}</h1>
 
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <span className={`status ${task.status}`}>
-                  {task.status.replace("_", " ")}
-                </span>
-                <span className="status">
-                  Priority: {task.priority}
-                </span>
-              </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <span className={`status ${task.status}`}>
+                {task.status.replace("_", " ")}
+              </span>
+              <span className="status">
+                Priority: {task.priority}
+              </span>
             </div>
 
             {task.description && (
-              <p style={{ marginBottom: 16, color: "#374151" }}>
+              <p style={{ marginTop: 12 }}>
                 {task.description}
               </p>
             )}
-
-            <button onClick={() => setEditing(true)}>Edit Task</button>
+            <div style={{ marginTop: 20 }}>
+              <button onClick={() => setEditing(true)}>
+                Edit Task
+              </button>
+            </div>
           </>
         ) : (
           <>
-            <h2 style={{ marginBottom: 12 }}>Edit Task</h2>
+            <h2>Edit Task</h2>
 
             <TaskForm
-              initialData={{
-                title: task.title,
-                description: task.description,
-                status: task.status,
-                priority: task.priority,
-                due_date: task.due_date,
-              }}
+              initialData={task}
               submitLabel="Save Changes"
               onSubmit={handleUpdate}
             />
 
-            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setEditing(false)}
-              >
-                Cancel
-              </button>
-            </div>
+            <button
+              className="secondary"
+              style={{ marginTop: 12 }}
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </button>
           </>
         )}
       </div>
 
       {/* ======================
-          Comments
+          COMMENTS
       ====================== */}
       <div className="card">
-        <h2 style={{ marginBottom: 12 }}>Comments</h2>
+        <h2>Comments</h2>
         <CommentList
           taskId={taskId}
           comments={comments}
-          refresh={() => getComments(taskId).then(setComments)}
+          refresh={async () => {
+            await getComments(taskId).then(setComments);
+          }}
+          notify={notify}
         />
       </div>
 
       {/* ======================
-          Files
+          FILES
       ====================== */}
       <div className="card">
-        <h2 style={{ marginBottom: 12 }}>Attachments</h2>
+        <h2>Attachments</h2>
         <FileUpload
           taskId={taskId}
           files={files}
-          refresh={() => getFiles(taskId).then(setFiles)}
+          refresh={async () => {
+            await getFiles(taskId).then(setFiles);
+          }}
+          notify={notify}
         />
       </div>
     </div>

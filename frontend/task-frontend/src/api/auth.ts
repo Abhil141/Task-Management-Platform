@@ -8,7 +8,6 @@ export type RegisterPayload = {
 };
 
 /* ---------- LOGIN ---------- */
-/* FastAPI OAuth2PasswordRequestForm expects form data */
 export async function login(email: string, password: string) {
   const form = new URLSearchParams();
   form.append("username", email);
@@ -27,7 +26,6 @@ export async function login(email: string, password: string) {
 }
 
 /* ---------- REGISTER ---------- */
-/* Register uses normal JSON */
 export async function register(data: RegisterPayload) {
   return apiFetch("/auth/register", {
     method: "POST",

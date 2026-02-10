@@ -1,28 +1,61 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createTask, bulkCreateTasks, type TaskInput } from "../api/tasks";
+
+import {
+  createTask,
+  bulkCreateTasks,
+  type TaskInput,
+} from "../api/tasks";
+
 import TaskForm from "../components/TaskForm";
+import Toast from "../components/Toast";
+
 import "../layout/layout.css";
+
+type ToastType = "success" | "error" | "info";
 
 export default function CreateTask() {
   const navigate = useNavigate();
-  const [bulkText, setBulkText] = useState("");
-  const [error, setError] = useState("");
 
-  async function handleCreate(data: TaskInput) {
-    await createTask(data);
-    navigate("/tasks");
+  const [bulkText, setBulkText] = useState("");
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
+
+  const notify = (message: string, type: ToastType = "info") => {
+    setToast({ message, type });
+  };
+
+  function navigateWithDelay(path: string): void {
+    setTimeout(() => {
+      navigate(path);
+    }, 600); 
   }
 
-  async function handleBulkCreate() {
+  async function handleCreate(data: TaskInput): Promise<void> {
     try {
-      const lines = bulkText
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
+      await createTask(data);
+      notify("Task created successfully.", "success");
+      navigateWithDelay("/tasks");
+    } catch {
+      notify("Failed to create task.", "error");
+    }
+  }
 
-      if (!lines.length) return;
+  async function handleBulkCreate(): Promise<void> {
+    const lines = bulkText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
+    if (!lines.length) {
+      notify("Please enter at least one task.", "error");
+      return;
+    }
+
+    try {
       await bulkCreateTasks(
         lines.map((line) => {
           const [title, status = "todo", priority = "medium"] =
@@ -36,17 +69,27 @@ export default function CreateTask() {
         })
       );
 
-      navigate("/tasks");
+      notify("Tasks created successfully.", "success");
+      navigateWithDelay("/tasks");
     } catch {
-      setError("Bulk create failed");
+      notify("Bulk create failed. Please check the format.", "error");
     }
   }
 
   return (
     <div className="page">
-      <div style={{ marginBottom: "24px" }}>
+      {/* TOAST */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <div style={{ marginBottom: 24 }}>
         <button onClick={() => navigate("/tasks")}>
-            ← Back to Tasks
+          ← Back to Tasks
         </button>
       </div>
 
@@ -57,14 +100,17 @@ export default function CreateTask() {
 
       <div className="card section">
         <h3>Bulk Create Tasks</h3>
-        {error && <p className="error">{error}</p>}
+
         <textarea
           rows={6}
           placeholder="Fix bug | todo | high"
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
         />
-        <button onClick={handleBulkCreate}>Create Tasks</button>
+
+        <button onClick={handleBulkCreate}>
+          Create Tasks
+        </button>
       </div>
     </div>
   );

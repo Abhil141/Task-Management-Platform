@@ -1,21 +1,28 @@
 import { useRef, useState } from "react";
 import { uploadFile, deleteFile, type FileItem } from "../api/files";
 
+type ToastType = "success" | "error" | "info";
+
 type Props = {
   taskId: number;
   files: FileItem[];
-  refresh: () => void;
+  refresh: () => Promise<void>;
+  notify: (message: string, type?: ToastType) => void;
 };
 
-export default function FileUpload({ taskId, files, refresh }: Props) {
+export default function FileUpload({
+  taskId,
+  files,
+  refresh,
+  notify,
+}: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  function resetFileInput() {
+  function resetFileInput(): void {
     setFile(null);
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -23,34 +30,42 @@ export default function FileUpload({ taskId, files, refresh }: Props) {
   }
 
   async function handleUpload(): Promise<void> {
-    if (!file) return;
+    if (!file) {
+      notify("Please select a file before uploading.", "error");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      notify("File size must be under 10 MB.", "error");
+      return;
+    }
 
     try {
       setUploading(true);
-      setError(null);
 
       await uploadFile(taskId, file);
       resetFileInput();
-      refresh();
+
+      await refresh(); // 🔑 ensures UI updates
+      notify("File uploaded successfully.", "success");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to upload file"
-      );
-      resetFileInput();
+      if (err instanceof Error) {
+        notify(err.message, "error");
+      } else {
+        notify("Failed to upload file.", "error");
+      }
     } finally {
       setUploading(false);
     }
   }
 
   async function handleDelete(fileId: number): Promise<void> {
-    if (!confirm("Delete this file?")) return;
-
     try {
-      setError(null);
       await deleteFile(fileId);
-      refresh();
+      await refresh();
+      notify("File deleted successfully.", "success");
     } catch {
-      setError("Failed to delete file");
+      notify("Failed to delete file. Please try again.", "error");
     }
   }
 
@@ -58,24 +73,22 @@ export default function FileUpload({ taskId, files, refresh }: Props) {
     e.preventDefault();
     setDragOver(false);
 
-    const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile) {
-      setFile(droppedFile);
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
+    const droppedFile: File | undefined = e.dataTransfer.files?.[0];
+    if (!droppedFile) {
+      notify("No file detected. Try again.", "error");
+      return;
     }
+
+    setFile(droppedFile);
   }
 
-  function openFilePicker() {
+  function openFilePicker(): void {
     inputRef.current?.click();
   }
 
   return (
     <div>
-      {error && <p className="error">{error}</p>}
-
-      {/* Unified drag + click zone */}
+      {/* Upload zone */}
       <div
         onClick={openFilePicker}
         onDragOver={(e) => {
@@ -127,13 +140,15 @@ export default function FileUpload({ taskId, files, refresh }: Props) {
         ref={inputRef}
         type="file"
         hidden
-        onChange={(e) => {
-          const selected = e.target.files?.[0];
-          if (selected) {
-            setFile(selected);
-          }
-        }}
         disabled={uploading}
+        onChange={(e) => {
+          const selectedFile: File | undefined = e.target.files?.[0];
+          if (!selectedFile) {
+            notify("No file selected.", "error");
+            return;
+          }
+          setFile(selectedFile);
+        }}
       />
 
       <button
@@ -147,7 +162,7 @@ export default function FileUpload({ taskId, files, refresh }: Props) {
       {/* Existing files */}
       {files.length === 0 ? (
         <p className="empty" style={{ marginTop: "12px" }}>
-          No files attached
+          
         </p>
       ) : (
         <ul style={{ marginTop: "16px" }}>

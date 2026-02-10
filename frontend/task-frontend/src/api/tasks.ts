@@ -96,7 +96,7 @@ export const bulkCreateTasks = (tasks: TaskInput[]) =>
   }) as Promise<Task[]>;
 
 /* =======================
-   EXPORT TASKS (FIXED)
+   EXPORT TASKS 
 ======================= */
 
 export async function exportTasks(params: {
@@ -118,7 +118,6 @@ export async function exportTasks(params: {
       method: "GET",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
-        // 🔑 DO NOT overthink this
         Accept: "*/*",
       },
     }
