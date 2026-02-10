@@ -120,6 +120,19 @@ export default function Profile() {
           </ul>
         </div>
 
+        {/* System Info */}
+        <div className="card">
+          <h3>Platform</h3>
+          <p style={{ margin: "8px 0", color: "#6b7280" }}>
+            Task management platform with analytics support.
+          </p>
+          <ul style={{ margin: "8px 0", paddingLeft: "18px" }}>
+            <li>Tasks, comments & attachments</li>
+            <li>Analytics & reports</li>
+            <li>CSV / JSON exports</li>
+          </ul>
+        </div>
+        
         {/* Security */}
         <div className="card">
           <h3>Security</h3>
@@ -138,19 +151,6 @@ export default function Profile() {
           >
             Sensitive account settings are protected.
           </p>
-        </div>
-
-        {/* System Info */}
-        <div className="card">
-          <h3>Platform</h3>
-          <p style={{ margin: "8px 0", color: "#6b7280" }}>
-            Task management platform with analytics support.
-          </p>
-          <ul style={{ margin: "8px 0", paddingLeft: "18px" }}>
-            <li>Tasks, comments & attachments</li>
-            <li>Analytics & reports</li>
-            <li>CSV / JSON exports</li>
-          </ul>
         </div>
       </div>
 
