@@ -1,7 +1,9 @@
 fastapi
 uvicorn
 sqlalchemy
-passlib[bcrypt]
+pydantic
 python-jose
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+email-validator
 python-multipart
-pydantic[email]
